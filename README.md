@@ -42,3 +42,22 @@ A fictional retail chain operating across Azerbaijan with 12 stores in 5 regions
 
 ---
 
+🗂️ Data Model
+
+Star + Snowflake Schema — 7 tables
+
+Dim_Date ──────────────→ Fact_Sales ←──────── Dim_Product ←─── Dim_Category
+                              ↑                                       ↑
+Dim_Store ────────────────────┤                                       │
+Dim_Customer ─────────────────┘                                       │
+                                                                       │
+                          Fact_Targets ←── Dim_Store                  │
+                               ↑                                       │
+                          Dim_Date          Dim_Category ──────────────┘
+
+TableTypeRowsDim_DateDimension1,096Dim_StoreDimension12Dim_ProductDimension55Dim_CategorySnowflake Dimension5Dim_CustomerDimension2,600Fact_SalesFact31,252Fact_TargetsFact (Monthly Plan)2,132
+
+
+Why a separate Dim_Category? Fact_Targets is at category granularity (not product level), while Dim_Product[Category] is not unique. A dedicated Dim_Category table resolves this as a snowflake element, enabling clean relationships with both fact tables — a deliberate modeling decision to handle different granularity levels.
+
+---
