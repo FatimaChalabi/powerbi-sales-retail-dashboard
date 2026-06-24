@@ -21,3 +21,24 @@
 | Profitability & Simulation | Store Deep-Dive |
 |---|---|
 | ![Profitability](05_profitability_simulation.png) | ![Store Deep-Dive](06_store_deep_dive.png) |
+
+---
+
+## 📌 Project Overview
+
+A fictional retail chain operating across Azerbaijan with 12 stores in 5 regions was used as the business scenario. The dashboard was built to simulate a real-world BI solution that enables management to monitor sales performance, customer behavior, and profitability in one place.
+
+| | |
+|---|---|
+| **Tool** | Power BI Desktop |
+| **Dataset** | Synthetic data generated with Python |
+| **Time Period** | 2023 – 2025 (3 years) |
+| **Transactions** | 31,000+ sales records |
+| **Customers** | 2,600 |
+| **Products** | 55 across 5 categories |
+| **Stores** | 12 stores across 5 regions |
+
+> The dataset was generated with realistic seasonal patterns including Novruz holiday spikes, Black Friday peaks, New Year surges, and year-over-year growth trends. Stores were deliberately assigned different performance tiers (Star / Solid / Underperformer) to enable meaningful storytelling.
+
+---
+
