@@ -1,0 +1,242 @@
+# DAX Measures — Sales Retail Dashboard
+
+All measures are stored in the `_Measures` table.  
+Calculated columns are stored in their respective dimension tables (`Dim_Customer`, `Dim_Date`).
+
+---
+
+## 1. Core Financials
+
+```dax
+Total Revenue =
+SUMX(Fact_Sales, Fact_Sales[Quantity] * Fact_Sales[UnitPrice] * (1 - Fact_Sales[DiscountPct]))
+```
+
+```dax
+Total COGS =
+SUMX(Fact_Sales, Fact_Sales[Quantity] * Fact_Sales[UnitCost])
+```
+
+```dax
+Total Profit = [Total Revenue] - [Total COGS]
+```
+
+```dax
+Gross Margin % = DIVIDE([Total Profit], [Total Revenue])
+```
+
+```dax
+Total Quantity = SUM(Fact_Sales[Quantity])
+```
+
+```dax
+Total Orders = DISTINCTCOUNT(Fact_Sales[OrderID])
+```
+
+```dax
+Total Customers = DISTINCTCOUNT(Fact_Sales[CustomerID])
+```
+
+```dax
+Average Order Value = DIVIDE([Total Revenue], [Total Orders])
+```
+
+```dax
+Avg Discount % =
+DIVIDE(
+    SUMX(Fact_Sales, Fact_Sales[Quantity] * Fact_Sales[UnitPrice] * Fact_Sales[DiscountPct]),
+    SUMX(Fact_Sales, Fact_Sales[Quantity] * Fact_Sales[UnitPrice])
+)
+```
+
+---
+
+## 2. Time Intelligence
+
+> Requires `Dim_Date` to be marked as a Date Table with `Dim_Date[Date]` as the date column.
+
+```dax
+Revenue PY =
+CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(Dim_Date[Date]))
+```
+
+```dax
+Revenue YoY % = DIVIDE([Total Revenue] - [Revenue PY], [Revenue PY])
+```
+
+```dax
+Revenue YTD = TOTALYTD([Total Revenue], Dim_Date[Date])
+```
+
+```dax
+Revenue MTD = TOTALMTD([Total Revenue], Dim_Date[Date])
+```
+
+```dax
+Revenue Prior Month =
+CALCULATE([Total Revenue], DATEADD(Dim_Date[Date], -1, MONTH))
+```
+
+```dax
+Revenue MoM % = DIVIDE([Total Revenue] - [Revenue Prior Month], [Revenue Prior Month])
+```
+
+```dax
+Running Total Revenue =
+CALCULATE(
+    [Total Revenue],
+    FILTER(ALLSELECTED(Dim_Date[Date]), Dim_Date[Date] <= MAX(Dim_Date[Date]))
+)
+```
+
+---
+
+## 3. Target vs Actual
+
+```dax
+Total Target = SUM(Fact_Targets[TargetRevenue])
+```
+
+```dax
+Target Achievement % = DIVIDE([Total Revenue], [Total Target])
+```
+
+```dax
+Variance to Target = [Total Revenue] - [Total Target]
+```
+
+```dax
+Target Status =
+IF(
+    [Target Achievement %] >= 1, "✅ Target Met",
+    IF([Target Achievement %] >= 0.9, "⚠️ Near Target", "🔴 Below Target")
+)
+```
+
+---
+
+## 4. Customer Analytics
+
+```dax
+New Customers =
+CALCULATE(
+    DISTINCTCOUNT(Fact_Sales[CustomerID]),
+    FILTER(
+        Dim_Customer,
+        Dim_Customer[FirstPurchaseDate] >= MIN(Dim_Date[Date]) &&
+        Dim_Customer[FirstPurchaseDate] <= MAX(Dim_Date[Date])
+    )
+)
+```
+
+```dax
+Returning Customers = [Total Customers] - [New Customers]
+```
+
+```dax
+Retention Rate % = DIVIDE([Returning Customers], [Total Customers])
+```
+
+---
+
+## 5. Advanced Analytics
+
+### Store Ranking
+```dax
+Store Revenue Rank =
+RANKX(ALL(Dim_Store[StoreName]), [Total Revenue], , DESC)
+```
+
+### Pareto / ABC Analysis
+```dax
+Product Cumulative Revenue % =
+VAR AllProducts = ALL(Dim_Product[ProductName])
+VAR CurrentRank = RANKX(AllProducts, CALCULATE([Total Revenue]), , DESC)
+VAR CumulativeRevenue =
+    SUMX(
+        FILTER(AllProducts, RANKX(AllProducts, CALCULATE([Total Revenue]), , DESC) <= CurrentRank),
+        CALCULATE([Total Revenue])
+    )
+VAR TotalAllProducts = CALCULATE([Total Revenue], ALL(Dim_Product[ProductName]))
+RETURN DIVIDE(CumulativeRevenue, TotalAllProducts)
+```
+
+### Discount Simulation (What-if Parameter)
+```dax
+Simulated Revenue =
+SUMX(
+    Fact_Sales,
+    Fact_Sales[Quantity] * Fact_Sales[UnitPrice] * (1 - 'Discount Simulator'[Discount Simulator Value])
+)
+```
+
+```dax
+Simulated Margin % = DIVIDE([Simulated Revenue] - [Total COGS], [Simulated Revenue])
+```
+
+### Dynamic Title
+```dax
+Dynamic Title =
+"Sales Performance — " &
+SELECTEDVALUE(Dim_Date[Year], "All Years") &
+" | " &
+SELECTEDVALUE(Dim_Store[Region], "All Regions")
+```
+
+---
+
+## 6. Calculated Columns
+
+### Dim_Customer
+
+```dax
+FirstPurchaseDateKey = CALCULATE(MIN(Fact_Sales[DateKey]))
+```
+
+```dax
+LastPurchaseDateKey = CALCULATE(MAX(Fact_Sales[DateKey]))
+```
+
+```dax
+FirstPurchaseDate =
+LOOKUPVALUE(Dim_Date[Date], Dim_Date[DateKey], Dim_Customer[FirstPurchaseDateKey])
+```
+
+```dax
+LastPurchaseDate =
+LOOKUPVALUE(Dim_Date[Date], Dim_Date[DateKey], Dim_Customer[LastPurchaseDateKey])
+```
+
+```dax
+Recency (Days) = DATEDIFF(Dim_Customer[LastPurchaseDate], DATE(2025, 12, 31), DAY)
+```
+
+```dax
+Frequency (Orders) = CALCULATE(DISTINCTCOUNT(Fact_Sales[OrderID]))
+```
+
+```dax
+Monetary (Revenue) = CALCULATE([Total Revenue])
+```
+
+```dax
+RFM Segment =
+SWITCH(
+    TRUE(),
+    ISBLANK(Dim_Customer[Recency (Days)]), "➖ Never Purchased",
+    Dim_Customer[Recency (Days)] <= 60 && Dim_Customer[Frequency (Orders)] >= 5, "🏆 Champion",
+    Dim_Customer[Recency (Days)] <= 90 && Dim_Customer[Frequency (Orders)] >= 3, "💎 Loyal",
+    Dim_Customer[Recency (Days)] <= 120, "🌱 Potential",
+    Dim_Customer[Recency (Days)] > 180, "⚠️ At Risk",
+    "➖ Regular"
+)
+```
+
+### Dim_Date
+
+```dax
+MonthYearSort = Dim_Date[Year] * 100 + Dim_Date[Month]
+```
+
+> `MonthYearSort` is used as the **Sort by Column** value for `MonthYear` to ensure chronological ordering in visuals.
+
