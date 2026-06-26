@@ -146,3 +146,13 @@ Accessible via right-click → Drill through on any store in Sales Performance.
 
 ---
 
+## 💡 Key Business Insights
+
+- 📈 **$3.8M total revenue** across 3 years — Star-tier stores growing ~18% YoY, underperformers nearly flat
+- 🎯 **99% overall target achievement** — top stores exceed targets at 104–105%, 4 stores lag at 85–86%
+- 🛍️ **Electronics drives 52.94% of revenue** but carries the lowest gross margin (16–18%)
+- ⚠️ **~24% of customers are "At Risk"** — no purchase in the last 180 days
+- 📊 **Retention rate steadily increases** from 2023 to 2025 — loyalty program showing positive effect
+- 💰 **Raising discount to 15% reduces gross margin from ~29.7% to ~25%** (Discount Simulator)
+
+---
