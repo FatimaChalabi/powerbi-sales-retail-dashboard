@@ -240,3 +240,16 @@ MonthYearSort = Dim_Date[Year] * 100 + Dim_Date[Month]
 
 > `MonthYearSort` is used as the **Sort by Column** value for `MonthYear` to ensure chronological ordering in visuals.
 
+---
+
+## Summary
+
+| Category | Count |
+|---|---|
+| Core Financials | 9 |
+| Time Intelligence | 7 |
+| Target vs Actual | 4 |
+| Customer Analytics | 3 |
+| Advanced Analytics | 5 |
+| Calculated Columns | 9 |
+| **Total** | **37** |
